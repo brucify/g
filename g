@@ -12,9 +12,15 @@
 #   sign <FILE>                         Sign a detached signature with the signer key specified in ~/.local/.g/gpg_signer
 #   verify <SIG> [FILE]                 Verify a detached signature of a file
 
-# Get the signer and recipient keys from the configuration files
-SIGNER=$(cat ~/.local/.g/gpg_signer)
-RECIPIENT=$(cat ~/.local/.g/gpg_recipient)
+GITHUB_URL=https://raw.githubusercontent.com/brucify/g/main/g
+
+# Set the paths for the signer and recipient key files
+SIGNER_PATH="$HOME/.local/.g/gpg_signer"
+RECIPIENT_PATH="$HOME/.local/.g/gpg_recipient"
+
+# Read the signer and recipient key IDs from the files
+SIGNER=$(cat "$SIGNER_PATH")
+RECIPIENT=$(cat "$RECIPIENT_PATH")
 
 # Function to encrypt a single file
 encrypt_file() {
@@ -61,11 +67,15 @@ verify() {
 
 # Function to print information about the signer key
 whoami() {
+    echo "$SIGNER_PATH"
+    echo "-------------------------------"
     gpg -K "$SIGNER"
 }
 
 # Function to print information about the recipient key
 recipient() {
+    echo "$RECIPIENT_PATH"
+    echo "-------------------------------"
     gpg -k "$RECIPIENT"
 }
 
@@ -78,6 +88,12 @@ genkey() {
     gpg --quick-add-key "$FPR" rsa4096 sign 2y
     gpg --quick-add-key "$FPR" rsa4096 encrypt 2y
     gpg --quick-add-key "$FPR" rsa4096 auth 2y
+}
+
+# Print the usage information for the script
+usage() {
+    echo "Usage: g {encrypt|decrypt|whoami|recipient|genkey|sign|verify|upgrade} [filename]"
+    echo "Encrypt, decrypt, sign, verify, or print information about GPG keys. Use quotes for arguments with spaces."
 }
 
 # Parse command line arguments
@@ -127,10 +143,11 @@ case "$1" in
             echo "Generate a new GPG keypair with the given user ID and add it to your GPG keyring."
         fi
         ;;
+    upgrade)
+        curl $GITHUB_URL -J -o "$HOME/.local/.g/g"
+        ;;
     help)
-        echo "Usage: g {encrypt|decrypt|whoami|recipient|genkey|sign|verify} [filename]"
-        echo "Encrypt, decrypt, sign, verify, or print information about GPG keys."
-        echo "Use quotes for arguments with spaces."
+	usage
         echo ""
         echo "Commands:"
         echo "  encrypt <FILE>                      Encrypt a file with recipient specified in ~/.local/.g/gpg_recipient"
@@ -141,11 +158,11 @@ case "$1" in
         echo "  genkey \"John Doe <john@doe.com>\"    Generate a new key pair with specified"
         echo "  sign <FILE>                         Sign a file using the signer key in ~/.local/.g/gpg_signer"
         echo "  verify <SIG> [FILE]                 Verify a detached signature of a file or the standard input"
+        echo "  upgrade                             Upgrade g to the latest version from GitHub"
         ;;
     *)
         echo "Unknown command: $1"
-        echo "Usage: g {encrypt|decrypt|whoami|recipient|genkey|sign|verify} [filename]"
-        echo "Encrypt, decrypt, or print information about GPG keys. Use quotes for arguments with spaces."
+	usage
         exit 1
 esac
 
