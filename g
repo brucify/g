@@ -92,7 +92,7 @@ genkey() {
 
 # Print the usage information for the script
 usage() {
-    echo "Usage: g {encrypt|decrypt|whoami|recipient|genkey|sign|verify|upgrade} [filename]"
+    echo "Usage: g {encrypt|decrypt|whoami|recipient|genkey|sign|verify|upgrade|export signer|export recipient} [filename]"
     echo "Encrypt, decrypt, sign, verify, or print information about GPG keys. Use quotes for arguments with spaces."
 }
 
@@ -146,6 +146,24 @@ case "$1" in
     upgrade)
         curl $GITHUB_URL -J -o "$HOME/.local/.g/g"
         ;;
+    export)
+        case "$2" in
+            signer)
+                echo "$SIGNER_PATH" >&2
+                echo "-------------------------------" >&2
+                gpg -a --export "$SIGNER"
+                ;;
+            recipient)
+                echo "$RECIPIENT_PATH" >&2
+                echo "-------------------------------" >&2
+                gpg -a --export "$RECIPIENT"
+                ;;
+            *)
+                echo "Error: invalid argument. Usage: g export {signer|recipient}"
+                exit 1
+                ;;
+        esac
+        ;;
     help)
 	usage
         echo ""
@@ -158,6 +176,8 @@ case "$1" in
         echo "  genkey \"John Doe <john@doe.com>\"    Generate a new key pair with specified"
         echo "  sign <FILE>                         Sign a file using the signer key in ~/.local/.g/gpg_signer"
         echo "  verify <SIG> [FILE]                 Verify a detached signature of a file or the standard input"
+        echo "  export signer                       Export the signer public key in ASCII format"
+        echo "  export recipient                    Export the recipient public key in ASCII format"
         echo "  upgrade                             Upgrade g to the latest version from GitHub"
         ;;
     *)
