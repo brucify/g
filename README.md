@@ -7,6 +7,8 @@ Script for easy interaction with basic gpg commands.
 ```bash
 $ curl https://raw.githubusercontent.com/brucify/g/main/g -J -o $HOME/.local/bin/g
 $ chmod +x $HOME/.local/bin/g
+$ g config signer <YOUR KEY ID HERE>
+$ g config recipient <THEIR KEY ID HERE>
 ```
 
 ## Usage
@@ -27,4 +29,6 @@ Commands:
   export signer                       Export the signer public key in ASCII format
   export recipient                    Export the recipient public key in ASCII format
   upgrade                             Upgrade g to the latest version from GitHub
+  config signer [KEY_ID]              Set or display the signer key ID in ~/.local/.g/gpg_signer
+  config recipient [KEY_ID]           Set or display the recipient key ID in ~/.local/.g/gpg_recipient
 ```

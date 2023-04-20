@@ -1,16 +1,22 @@
 #!/bin/sh
 
-# Usage: g [command] [arguments]
-#
+# Usage: g {encrypt|decrypt|whoami|recipient|genkey|sign|verify|upgrade|export signer|export recipient|config signer|config recipient} [filename]
+# Encrypt, decrypt, sign, verify, or print information about GPG keys. Use quotes for arguments with spaces.
+# 
 # Commands:
 #   encrypt <FILE>                      Encrypt a file with recipient specified in ~/.local/.g/gpg_recipient
 #   decrypt <FILE>                      Decrypt a file with sender key specified in ~/.local/.g/gpg_signer
-#   decrypt                             Decrypt all .asc files in current directory
+#   decrypt                             Decrypt all .asc and .gpg files in current directory
 #   whoami                              Display information about the signer key in ~/.local/.g/gpg_signer
 #   recipient                           Display information about the recipient key in ~/.local/.g/gpg_recipient
-#   genkey "John Doe <john@doe.com>"    Generate a new key pair with specified
-#   sign <FILE>                         Sign a detached signature with the signer key specified in ~/.local/.g/gpg_signer
-#   verify <SIG> [FILE]                 Verify a detached signature of a file
+#   genkey "John Doe <john@doe.com>"    Generate a new key pair with specified GPG user ID text
+#   sign <FILE>                         Sign a file using the signer key in ~/.local/.g/gpg_signer
+#   verify <SIG> [FILE]                 Verify a detached signature of a file or the standard input
+#   export signer                       Export the signer public key in ASCII format
+#   export recipient                    Export the recipient public key in ASCII format
+#   upgrade                             Upgrade g to the latest version from GitHub
+#   config signer [KEY_ID]              Set or display the signer key ID in ~/.local/.g/gpg_signer
+#   config recipient [KEY_ID]           Set or display the recipient key ID in ~/.local/.g/gpg_recipient
 
 GITHUB_URL=https://raw.githubusercontent.com/brucify/g/main/g
 
@@ -90,9 +96,37 @@ genkey() {
     gpg --quick-add-key "$FPR" rsa4096 auth 2y
 }
 
+# Upgrade g to the latest version from GitHub
+upgrade() {
+    curl $GITHUB_URL -J -o "$HOME/.local/.g/g"
+    echo "g upgraded to the latest version!"
+}
+
+# Configure the signer key
+config_signer() {
+    if [ $# -eq 0 ]; then
+        echo "Signer key: $SIGNER"
+    else
+        mkdir -p $(dirname $SIGNER_PATH)
+        echo $1 > $SIGNER_PATH
+        echo "Signer key set to: $1"
+    fi
+}
+
+# Configure the recipient key
+config_recipient() {
+    if [ $# -eq 0 ]; then
+        echo "Recipient key: $RECIPIENT"
+    else
+        mkdir -p $(dirname $RECIPIENT_PATH)
+        echo $1 > $RECIPIENT_PATH
+        echo "Recipient key set to: $1"
+    fi
+}
+
 # Print the usage information for the script
 usage() {
-    echo "Usage: g {encrypt|decrypt|whoami|recipient|genkey|sign|verify|upgrade|export signer|export recipient} [filename]"
+    echo "Usage: g {encrypt|decrypt|whoami|recipient|genkey|sign|verify|upgrade|export signer|export recipient|config signer|config recipient} [filename]"
     echo "Encrypt, decrypt, sign, verify, or print information about GPG keys. Use quotes for arguments with spaces."
 }
 
@@ -144,7 +178,7 @@ case "$1" in
         fi
         ;;
     upgrade)
-        curl $GITHUB_URL -J -o "$HOME/.local/.g/g"
+        upgrade
         ;;
     export)
         case "$2" in
@@ -164,6 +198,13 @@ case "$1" in
                 ;;
         esac
         ;;
+    config) 
+        case $2 in
+            signer) config_signer $3;;
+            recipient) config_recipient $3;;
+            *) usage;;
+        esac
+        ;;
     help)
 	usage
         echo ""
@@ -173,12 +214,14 @@ case "$1" in
         echo "  decrypt                             Decrypt all .asc and .gpg files in current directory"
         echo "  whoami                              Display information about the signer key in ~/.local/.g/gpg_signer"
         echo "  recipient                           Display information about the recipient key in ~/.local/.g/gpg_recipient"
-        echo "  genkey \"John Doe <john@doe.com>\"    Generate a new key pair with specified"
+        echo "  genkey \"John Doe <john@doe.com>\"    Generate a new key pair with specified GPG user ID text"
         echo "  sign <FILE>                         Sign a file using the signer key in ~/.local/.g/gpg_signer"
         echo "  verify <SIG> [FILE]                 Verify a detached signature of a file or the standard input"
         echo "  export signer                       Export the signer public key in ASCII format"
         echo "  export recipient                    Export the recipient public key in ASCII format"
         echo "  upgrade                             Upgrade g to the latest version from GitHub"
+        echo "  config signer [KEY_ID]              Set or display the signer key ID in ~/.local/.g/gpg_signer"
+        echo "  config recipient [KEY_ID]           Set or display the recipient key ID in ~/.local/.g/gpg_recipient"
         ;;
     *)
         echo "Unknown command: $1"
