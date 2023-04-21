@@ -37,23 +37,15 @@ genkey() {
     EMAIL=$(echo "$GPG_UID" | sed -n 's/.*<\(.*\)>/\1/p')
     gpg --quick-gen-key "$GPG_UID" rsa4096 cert 2y
     FPR=$(gpg -k --list-options show-only-fpr-mbox | grep "$EMAIL" | awk '{print $1}')
-    gpg --quick-add-key "$FPR" rsa4096 sign 2y
-    gpg --quick-add-key "$FPR" rsa4096 encrypt 2y
-    gpg --quick-add-key "$FPR" rsa4096 auth 2y
+    addkeys "$FPR"
 }
-
 
 # Function to add three subkeys (sign, encrypt, auth) to an existing key:
 addkeys() {
-    FPR=$(fgr "$1")
+    FPR="$1"
     gpg --quick-add-key "$FPR" rsa4096 sign 2y
     gpg --quick-add-key "$FPR" rsa4096 encrypt 2y
     gpg --quick-add-key "$FPR" rsa4096 auth 2y
-}
-
-# Function to add three subkeys (sign, encrypt, auth) to the signer key:
-addkeys_for_signer() {
-    addkeys "$SIGNER"
 }
 
 # Function to print information about the signer key
@@ -184,11 +176,12 @@ case "$1" in
         fi
         ;;
     addkeys)
-        if [ -n "$2" ]; then
-            addkeys "$2"
+        if [ -z "$2" ]; then
+            FPR=$(fgr "$SIGNER")
         else
-            addkeys_for_signer
+            FPR=$(fgr "$2")
         fi
+        addkeys "$FPR"
         ;;
     whoami)
         whoami
