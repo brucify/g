@@ -187,7 +187,7 @@ sshcontrol() {
 
 # Upgrade g to the latest version from GitHub
 upgrade() {
-    curl $GITHUB_URL -J -o "$HOME/.local/.g/g"
+    curl $GITHUB_URL -J -o "$HOME/.local/bin/g"
     echo "g upgraded to the latest version!"
 }
 
