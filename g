@@ -130,6 +130,7 @@ config_recipient() {
 }
 
 keytocard() {
+    export GPG_TTY=$(tty) # https://github.com/keybase/keybase-issues/issues/2798
     echo "Moving GPG subkeys to YubiKey..." >&2
     # The --command-fd 0 option instructs gpg2 to read commands from file descriptor 0, which is the pipe that receives
     # the commands from printf.
